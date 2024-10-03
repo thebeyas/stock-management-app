@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ürün Yönetimi</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        body {
+            background-color: #007bff; /* Arka plan rengi mavi yapıldı */
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-top: 30px;
+        }
+        h1, h2 {
+            color: #343a40;
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .btn {
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-footer .btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .modal-footer .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="mt-5 text-center">Ürün Yönetimi</h1>
+
+    <form th:action="@{/api/products}" method="post">
+        <div class="form-group">
+            <label for="productName">Ürün Adı</label>
+            <input type="text" id="productName" name="productName" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="stockQuantity">Stok Miktarı</label>
+            <input type="number" id="stockQuantity" name="stockQuantity" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="price">Fiyat</label>
+            <input type="number" id="price" name="price" step="0.01" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Ürün Ekle</button>
+    </form>
+
+    <h2 class="mt-5">Ürün Listesi</h2>
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Ürün Adı</th>
+            <th>Stok Miktarı</th>
+            <th>Fiyat</th>
+            <th>İşlemler</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}">
+            <td th:text="${product.id}"></td>
+            <td th:text="${product.productName}"></td>
+            <td th:text="${product.stockQuantity}"></td>
+            <td th:text="${product.price}"></td>
+            <td>
+                <!-- Güncelleme butonu -->
+                <button class="btn btn-warning" data-toggle="modal" data-target="#updateModal"
+                        th:data-id="${product.id}"
+                        th:data-product-name="${product.productName}"
+                        th:data-stock-quantity="${product.stockQuantity}"
+                        th:data-price="${product.price}">
+                    <i class="fas fa-edit"></i> Güncelle
+                </button>
+                <!-- Silme formu -->
+                <form th:action="@{/api/products/{id}/delete(id=${product.id})}" method="post" onsubmit="return confirm('Bu ürünü silmek istediğinize emin misiniz?');" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt"></i> Sil
+                    </button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Güncelleme Modalı -->
+<div class="modal fade" id="updateModal" tabindex="-1" role="dialog" aria-labelledby="updateModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updateModalLabel">Ürün Güncelle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Kapat">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="updateForm" method="post">
+                    <input type="hidden" id="updateId" name="id">
+                    <div class="form-group">
+                        <label for="updateProductName">Ürün Adı</label>
+                        <input type="text" id="updateProductName" name="productName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="updateStockQuantity">Stok Miktarı</label>
+                        <input type="number" id="updateStockQuantity" name="stockQuantity" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="updatePrice">Fiyat</label>
+                        <input type="number" id="updatePrice" name="price" step="0.01" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Güncelle</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Modal açıldığında form alanlarını doldur
+    $('#updateModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Güncelle butonuna tıklanan elemanı al
+        var id = button.data('id'); // Verileri al
+        var productName = button.data('product-name');
+        var stockQuantity = button.data('stock-quantity');
+        var price = button.data('price');
+
+        var modal = $(this);
+        modal.find('#updateId').val(id);
+        modal.find('#updateProductName').val(productName);
+        modal.find('#updateStockQuantity').val(stockQuantity);
+        modal.find('#updatePrice').val(price);
+
+        // Güncelleme formu için aksiyon
+        modal.find('#updateForm').attr('action', '/api/products/' + id);
+    });
+</script>
+
+</body>
+</html>
